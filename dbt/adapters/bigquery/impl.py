@@ -26,7 +26,6 @@ import time
 import agate
 
 
-
 def column_to_bq_schema(col):
     """Convert a column to a bigquery schema object. This is here instead of
     in dbt.schema to avoid importing google libraries there.
@@ -38,7 +37,6 @@ def column_to_bq_schema(col):
 
     return google.cloud.bigquery.SchemaField(col.name, col.dtype, col.mode,
                                              **kwargs)
-
 
 
 class BigQueryAdapter(BaseAdapter):
