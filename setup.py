@@ -51,6 +51,9 @@ setup(
         'scripts/dbt',
     ],
     extras_require={
+        # when we split out adapters into their own python packages, these
+        # extras requirements lists will just be the appropriate adapter
+        # packages
         'snowflake': ['snowflake-connector-python>=1.4.9'] + boto_requirements,
         'bigquery': ['google-cloud-bigquery>=1.0.0,<2'],
         'redshift': boto_requirements[:] + postgres_requirements[:],
