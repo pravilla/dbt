@@ -28,9 +28,7 @@ class SQLConnectionManager(BaseConnectionManager):
         )
 
     def cancel_open(self):
-        global connections_in_use
-
-        for name, connection in connections_in_use.items():
+        for name, connection in self.in_use.items():
             if name == 'master':
                 continue
 
