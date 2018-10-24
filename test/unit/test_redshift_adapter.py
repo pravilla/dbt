@@ -51,10 +51,13 @@ class TestRedshiftAdapter(unittest.TestCase):
         }
 
         self.config = config_from_parts_or_dicts(project_cfg, profile_cfg)
+        self._adapter = None
 
     @property
     def adapter(self):
-        return RedshiftAdapter(self.config)
+        if self._adapter is None:
+            self._adapter = RedshiftAdapter(self.config)
+        return self._adapter
 
     def test_implicit_database_conn(self):
         creds = RedshiftAdapter.ConnectionManager.get_credentials(self.config.credentials)
@@ -99,6 +102,31 @@ class TestRedshiftAdapter(unittest.TestCase):
 
         self.assertTrue("'cluster_id' must be provided" in context.exception.msg)
 
+    def test_cancel_open_connections_empty(self):
+        self.assertEqual(len(list(self.adapter.cancel_open_connections())), 0)
+
+    def test_cancel_open_connections_master(self):
+        self.adapter.connections.in_use['master'] = mock.MagicMock()
+        self.assertEqual(len(list(self.adapter.cancel_open_connections())), 0)
+
+    def test_cancel_open_connections_single(self):
+        master = mock.MagicMock()
+        model = mock.MagicMock()
+        model.handle.get_backend_pid.return_value = 42
+
+        self.adapter.connections.in_use.update({
+            'master': master,
+            'model': model,
+        })
+        with mock.patch.object(self.adapter.connections, 'add_query') as add_query:
+            query_result = mock.MagicMock()
+            add_query.return_value = (None, query_result)
+
+            self.assertEqual(len(list(self.adapter.cancel_open_connections())), 1)
+
+            add_query.assert_called_once_with('select pg_terminate_backend(42)', 'master')
+
+        master.handle.get_backend_pid.assert_not_called()
 
     @mock.patch('dbt.adapters.postgres.connections.psycopg2')
     def test_default_keepalive(self, psycopg2):

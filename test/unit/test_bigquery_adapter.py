@@ -93,6 +93,24 @@ class TestBigQueryAdapter(unittest.TestCase):
 
         mock_open_connection.assert_called_once()
 
+    def test_cancel_open_connections_empty(self):
+        adapter = self.get_adapter('test')
+        self.assertEqual(adapter.cancel_open_connections(), None)
+
+    def test_cancel_open_connections_master(self):
+        adapter = self.get_adapter('test')
+        adapter.connections.in_use['master'] = object()
+        self.assertEqual(adapter.cancel_open_connections(), None)
+
+    def test_cancel_open_connections_single(self):
+        adapter = self.get_adapter('test')
+        adapter.connections.in_use.update({
+            'master': object(),
+            'model': object(),
+        })
+        # actually does nothing
+        self.assertEqual(adapter.cancel_open_connections(), None)
+
 
 class TestBigQueryRelation(unittest.TestCase):
     def setUp(self):
