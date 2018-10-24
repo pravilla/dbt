@@ -39,10 +39,13 @@ class TestPostgresAdapter(unittest.TestCase):
         }
 
         self.config = config_from_parts_or_dicts(project_cfg, profile_cfg)
+        self._adapter = None
 
     @property
     def adapter(self):
-        return PostgresAdapter(self.config)
+        if self._adapter is None:
+            self._adapter = PostgresAdapter(self.config)
+        return self._adapter
 
     def test_acquire_connection_validations(self):
         try:
@@ -60,6 +63,33 @@ class TestPostgresAdapter(unittest.TestCase):
         self.assertEquals(connection.state, 'open')
         self.assertNotEquals(connection.handle, None)
 
+    def test_cancel_open_connections_empty(self):
+        self.assertEqual(len(list(self.adapter.cancel_open_connections())), 0)
+
+    def test_cancel_open_connections_master(self):
+        self.adapter.connections.in_use['master'] = mock.MagicMock()
+        self.assertEqual(len(list(self.adapter.cancel_open_connections())), 0)
+
+    def test_cancel_open_connections_single(self):
+        master = mock.MagicMock()
+        model = mock.MagicMock()
+        model.handle.get_backend_pid.return_value = 42
+
+        self.adapter.connections.in_use.update({
+            'master': master,
+            'model': model,
+        })
+        with mock.patch.object(self.adapter.connections, 'add_query') as add_query:
+            query_result = mock.MagicMock()
+            add_query.return_value = (None, query_result)
+
+            self.assertEqual(len(list(self.adapter.cancel_open_connections())), 1)
+
+            add_query.assert_called_once_with('select pg_terminate_backend(42)', 'master')
+
+        master.handle.get_backend_pid.assert_not_called()
+
+
     @mock.patch('dbt.adapters.postgres.connections.psycopg2')
     def test_default_keepalive(self, psycopg2):
         connection = self.adapter.acquire_connection('dummy')
@@ -74,10 +104,9 @@ class TestPostgresAdapter(unittest.TestCase):
 
     @mock.patch('dbt.adapters.postgres.connections.psycopg2')
     def test_changed_keepalive(self, psycopg2):
-        credentials = self.adapter.config.credentials.incorporate(
+        self.config.credentials = self.config.credentials.incorporate(
             keepalives_idle=256
         )
-        self.adapter.config.credentials = credentials
         connection = self.adapter.acquire_connection('dummy')
 
         psycopg2.connect.assert_called_once_with(
@@ -91,8 +120,9 @@ class TestPostgresAdapter(unittest.TestCase):
 
     @mock.patch('dbt.adapters.postgres.connections.psycopg2')
     def test_set_zero_keepalive(self, psycopg2):
-        credentials = self.config.credentials.incorporate(keepalives_idle=0)
-        self.config.credentials = credentials
+        self.config.credentials = self.config.credentials.incorporate(
+            keepalives_idle=0
+        )
         connection = self.adapter.acquire_connection('dummy')
 
         psycopg2.connect.assert_called_once_with(
@@ -165,7 +195,6 @@ class TestConnectingPostgresAdapter(unittest.TestCase):
 
         self.psycopg2.connect.return_value = self.handle
         self.adapter = PostgresAdapter(self.config)
-        # self.adapter.get_connection()
 
     def tearDown(self):
         # we want a unique self.handle every time.
