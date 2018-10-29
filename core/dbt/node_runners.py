@@ -13,7 +13,6 @@ import dbt.tracking
 import dbt.ui.printer
 import dbt.flags
 import dbt.schema
-import dbt.templates
 import dbt.writer
 
 import six
