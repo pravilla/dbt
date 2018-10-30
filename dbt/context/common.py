@@ -399,8 +399,7 @@ def generate_base(model, model_dict, config, manifest, source_config,
     return context
 
 
-def modify_generated_context(context, model, model_dict, config,
-                             manifest):
+def modify_generated_context(context, model, model_dict, config, manifest):
     cli_var_overrides = config.cli_vars
 
     context = _add_tracking(context)

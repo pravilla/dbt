@@ -29,7 +29,7 @@ class BaseConnectionManager(object):
         self.profile = profile
         self.in_use = {}
         self.available = []
-        self.lock = multiprocessing.Lock()
+        self.lock = multiprocessing.RLock()
         self._set_initial_connections()
 
     def _set_initial_connections(self):
@@ -240,6 +240,8 @@ class BaseConnectionManager(object):
         """
         if dbt.flags.STRICT_MODE:
             Connection(**connection)
+
+        connection = self.get(connection.name)
 
         if connection.transaction_open is False:
             raise dbt.exceptions.InternalException(
