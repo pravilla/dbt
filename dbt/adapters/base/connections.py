@@ -241,8 +241,6 @@ class BaseConnectionManager(object):
         if dbt.flags.STRICT_MODE:
             Connection(**connection)
 
-        connection = self.get(connection.name)
-
         if connection.transaction_open is False:
             raise dbt.exceptions.InternalException(
                 'Tried to rollback transaction on connection "{}", but '
