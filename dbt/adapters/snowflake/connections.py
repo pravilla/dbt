@@ -149,3 +149,14 @@ class SnowflakeConnectionManager(SQLConnectionManager):
                     "Provided SQL:\n{}".format(model_name, sql))
 
         return connection, cursor
+
+    def _rollback_handle(self, connection):
+        """On snowflake, rolling back the handle of an aborted session raises
+        an exception.
+        """
+        try:
+            connection.handle.rollback()
+        except snowflake.connector.errors.ProgrammingError as e:
+            msg = dbt.compat.to_string(e)
+            if 'Session no longer exists' not in msg:
+                raise

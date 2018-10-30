@@ -232,6 +232,10 @@ class BaseConnectionManager(object):
             '`commit` is not implemented for this adapter!'
         )
 
+    def _rollback_handle(self, connection):
+        """Perform the actual rollback operation."""
+        connection.handle.rollback()
+
     def _rollback(self, connection):
         """Roll back the given connection.
 
@@ -247,7 +251,7 @@ class BaseConnectionManager(object):
                 'it does not have one open!'.format(connection.name))
 
         logger.debug('On {}: ROLLBACK'.format(connection.name))
-        connection.handle.rollback()
+        self._rollback_handle(connection)
 
         connection.transaction_open = False
 
