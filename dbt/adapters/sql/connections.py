@@ -28,12 +28,15 @@ class SQLConnectionManager(BaseConnectionManager):
         )
 
     def cancel_open(self):
-        for name, connection in self.in_use.items():
-            if name == 'master':
-                continue
+        names = []
+        with self.lock:
+            for name, connection in self.in_use.items():
+                if name == 'master':
+                    continue
 
-            self.cancel(connection)
-            yield name
+                self.cancel(connection)
+                names.append(name)
+        return names
 
     def add_query(self, sql, name=None, auto_begin=True, bindings=None,
                   abridge_sql_log=False):
