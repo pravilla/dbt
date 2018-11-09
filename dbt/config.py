@@ -213,7 +213,7 @@ class Project(object):
                  source_paths, macro_paths, data_paths, test_paths,
                  analysis_paths, docs_paths, target_path, clean_targets,
                  log_path, modules_path, quoting, models, on_run_start,
-                 on_run_end, archive, seeds, packages):
+                 on_run_end, archive, seeds, namespace, packages):
         self.project_name = project_name
         self.version = version
         self.project_root = project_root
@@ -234,6 +234,7 @@ class Project(object):
         self.on_run_end = on_run_end
         self.archive = archive
         self.seeds = seeds
+        self.namespace = namespace
         self.packages = packages
 
     @staticmethod
@@ -318,6 +319,7 @@ class Project(object):
         on_run_end = project_dict.get('on-run-end', [])
         archive = project_dict.get('archive', [])
         seeds = project_dict.get('seeds', {})
+        namespace = project_dict.get('namespace')
 
         packages = package_config_from_data(packages_dict)
 
@@ -342,6 +344,7 @@ class Project(object):
             on_run_end=on_run_end,
             archive=archive,
             seeds=seeds,
+            namespace=namespace,
             packages=packages
         )
         # sanity check - this means an internal issue
@@ -387,6 +390,7 @@ class Project(object):
             'on-run-end': self.on_run_end,
             'archive': self.archive,
             'seeds': self.seeds,
+            'namespace': self.namespace,
         })
         if with_packages:
             result.update(self.packages.serialize())
@@ -797,7 +801,7 @@ class RuntimeConfig(Project, Profile):
                  macro_paths, data_paths, test_paths, analysis_paths,
                  docs_paths, target_path, clean_targets, log_path,
                  modules_path, quoting, models, on_run_start, on_run_end,
-                 archive, seeds, profile_name, target_name,
+                 archive, seeds, namespace, profile_name, target_name,
                  send_anonymous_usage_stats, use_colors, threads, credentials,
                  packages, args):
         # 'vars'
@@ -826,6 +830,7 @@ class RuntimeConfig(Project, Profile):
             on_run_end=on_run_end,
             archive=archive,
             seeds=seeds,
+            namespace=namespace,
             packages=packages,
         )
         # 'profile'
@@ -874,6 +879,7 @@ class RuntimeConfig(Project, Profile):
             on_run_end=project.on_run_end,
             archive=project.archive,
             seeds=project.seeds,
+            namespace=project.namespace,
             packages=project.packages,
             profile_name=profile.profile_name,
             target_name=profile.target_name,

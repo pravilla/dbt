@@ -22,6 +22,8 @@ class GraphLoader(object):
 
     def _load_macro_nodes(self, resource_type):
         for project_name, project in self.all_projects.items():
+            if project.namespace is not None:
+                project_name = project.namespace
             self.macros.update(MacroParser.load_and_parse(
                 package_name=project_name,
                 root_project=self.root_project,
@@ -34,6 +36,8 @@ class GraphLoader(object):
     def _load_sql_nodes(self, parser, resource_type, relative_dirs_attr,
                         **kwargs):
         for project_name, project in self.all_projects.items():
+            if project.namespace is not None:
+                project_name = project.namespace
             nodes, disabled = parser.load_and_parse(
                 package_name=project_name,
                 root_project=self.root_project,

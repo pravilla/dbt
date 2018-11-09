@@ -143,6 +143,10 @@ PROJECT_CONTRACT = {
             'type': 'object',
             'additionalProperties': True,
         },
+        'namespace': {
+            'type': ['string', 'null'],
+            'description': 'The namespace to give this project.',
+        }
     },
     'required': ['name', 'version'],
 }
