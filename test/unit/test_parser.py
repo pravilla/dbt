@@ -95,6 +95,19 @@ class ParserTest(unittest.TestCase):
             'tags': [],
         }
 
+        not_snowplow_namespace_project = {
+            'name': 'not_snowplow',
+            'version': '0.1',
+            'profile': 'test',
+            'project-root': os.path.abspath('./dbt_modules/not_snowplow'),
+            'namespace': 'snowplow',
+        }
+
+        self.not_snowplow_project_config = config_from_parts_or_dicts(
+            project=not_snowplow_namespace_project,
+            profile=profile_data
+        )
+
     def test__single_model(self):
         models = [{
             'name': 'model_one',

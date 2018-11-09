@@ -587,6 +587,7 @@ class TestProject(BaseConfigTest):
         self.assertEqual(project.on_run_end, [])
         self.assertEqual(project.archive, [])
         self.assertEqual(project.seeds, {})
+        self.assertEqual(project.namespace, None)
         self.assertEqual(project.packages, PackageConfig(packages=[]))
         # just make sure str() doesn't crash anything, that's always
         # embarrassing
@@ -684,6 +685,7 @@ class TestProject(BaseConfigTest):
                     'post-hook': 'grant select on {{ this }} to bi_user',
                 },
             },
+            'namespace': 'my-test-namespace',
         })
         packages = {
             'packages': [
@@ -755,6 +757,7 @@ class TestProject(BaseConfigTest):
                 'post-hook': 'grant select on {{ this }} to bi_user',
             },
         })
+        self.assertEqual(project.namespace, 'my-test-namespace')
         self.assertEqual(project.packages, PackageConfig(packages=[
             {
                 'local': 'foo',

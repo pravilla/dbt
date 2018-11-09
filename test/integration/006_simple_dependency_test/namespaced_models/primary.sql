@@ -1,0 +1,1 @@
+{{ dependent.do_it() }}

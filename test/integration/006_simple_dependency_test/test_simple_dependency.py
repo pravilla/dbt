@@ -122,3 +122,33 @@ class TestSimpleDependencyBranch(DBTIntegrationTest):
         models = self.get_models_in_schema()
 
         self.assertFalse('empty' in models.keys())
+
+class TestNamespacedDependency(DBTIntegrationTest):
+    @property
+    def models(self):
+        return "test/integration/006_simple_dependency_test/namespaced_models"
+
+    @property
+    def schema(self):
+        return "simple_dependency_006"
+
+    @property
+    def project_config(self):
+        return {
+            'namespace': 'dependent',
+            'macro-paths': ['test/integration/006_simple_dependency_test/namespaced_macros'],
+        }
+
+    @property
+    def packages_config(self):
+        return {
+            'packages': [
+                {'local': 'test/integration/006_simple_dependency_test/dependent'},
+            ],
+        }
+
+    @attr(type='postgres')
+    def test_postgres_whatever(self):
+        self.run_dbt(['deps'])
+        results = self.run_dbt(['run'])
+        self.assertEqual(len(results), 1)
