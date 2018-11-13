@@ -20,10 +20,14 @@ class GraphLoader(object):
         self.patches = {}
         self.disabled = []
 
-    def _load_macro_nodes(self, resource_type):
+    def get_projects(self):
         for project_name, project in self.all_projects.items():
             if project.namespace is not None:
                 project_name = project.namespace
+            yield project_name, project
+
+    def _load_macro_nodes(self, resource_type):
+        for project_name, project in self.get_projects():
             self.macros.update(MacroParser.load_and_parse(
                 package_name=project_name,
                 root_project=self.root_project,
@@ -35,9 +39,7 @@ class GraphLoader(object):
 
     def _load_sql_nodes(self, parser, resource_type, relative_dirs_attr,
                         **kwargs):
-        for project_name, project in self.all_projects.items():
-            if project.namespace is not None:
-                project_name = project.namespace
+        for project_name, project in self.get_projects():
             nodes, disabled = parser.load_and_parse(
                 package_name=project_name,
                 root_project=self.root_project,
@@ -56,7 +58,7 @@ class GraphLoader(object):
         self._load_macro_nodes(NodeType.Operation)
 
     def _load_seeds(self):
-        for project_name, project in self.all_projects.items():
+        for project_name, project in self.get_projects():
             self.nodes.update(SeedParser.load_and_parse(
                 package_name=project_name,
                 root_project=self.root_project,
@@ -83,7 +85,7 @@ class GraphLoader(object):
         self._load_seeds()
 
     def _load_docs(self):
-        for project_name, project in self.all_projects.items():
+        for project_name, project in self.get_projects():
             self.docs.update(DocumentationParser.load_and_parse(
                 package_name=project_name,
                 root_project=self.root_project,
@@ -93,7 +95,7 @@ class GraphLoader(object):
             ))
 
     def _load_schema_tests(self):
-        for project_name, project in self.all_projects.items():
+        for project_name, project in self.get_projects():
             tests, patches = SchemaParser.load_and_parse(
                 package_name=project_name,
                 root_project=self.root_project,
