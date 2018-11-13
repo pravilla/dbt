@@ -13,7 +13,7 @@ import os
 import dbt.exceptions
 import dbt.flags
 
-from dbt.include import GLOBAL_DBT_MODULES_PATH
+from dbt.include.global_project import PACKAGES
 from dbt.compat import basestring, DECIMALS
 from dbt.logger import GLOBAL_LOGGER as logger
 from dbt.node_types import NodeType
@@ -217,10 +217,8 @@ def dependencies_for_path(config, module_path):
 
 
 def dependency_projects(config):
-    module_paths = [
-        GLOBAL_DBT_MODULES_PATH,
-        os.path.join(config.project_root, config.modules_path)
-    ]
+    module_paths = list(PACKAGES.values())
+    module_paths.append(os.path.join(config.project_root, config.modules_path))
 
     for module_path in module_paths:
         for entry in dependencies_for_path(config, module_path):

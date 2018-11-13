@@ -9,15 +9,6 @@
     {%- endif -%}
 {% endmacro %}
 
-{% macro bigquery__handle_existing_table(full_refresh, non_destructive_mode, old_relation) %}
-    {%- if full_refresh and not non_destructive_mode -%}
-      {{ adapter.drop_relation(old_relation) }}
-    {%- else -%}
-      {{ exceptions.relation_wrong_type(old_relation, 'view') }}
-    {%- endif -%}
-{% endmacro %}
-
-
 {# /*
        Core materialization implementation. BigQuery and Snowflake are similar
        because both can use `create or replace view` where the resulting view schema
@@ -30,7 +21,7 @@
     */
 #}
 
-{% macro impl_view_materialization(run_outside_transaction_hooks=True) %}
+{% macro create_or_replace_view(run_outside_transaction_hooks=True) %}
   {%- set identifier = model['alias'] -%}
   {%- set non_destructive_mode = (flags.NON_DESTRUCTIVE == True) -%}
 
@@ -88,11 +79,3 @@
       {{ run_hooks(post_hooks, inside_transaction=False) }}
   {% endif %}
 {% endmacro %}
-
-{% materialization view, adapter='bigquery' -%}
-    {{ impl_view_materialization(run_outside_transaction_hooks=False) }}
-{%- endmaterialization %}
-
-{% materialization view, adapter='snowflake' -%}
-    {{ impl_view_materialization() }}
-{%- endmaterialization %}

@@ -4,7 +4,8 @@
   {{ adapter_macro('get_merge_sql', target, source, unique_key, dest_columns) }}
 {%- endmacro %}
 
-{% macro default__get_merge_sql(target, source, unique_key, dest_columns) -%}
+
+{% macro common_get_merge_sql(target, source, unique_key, dest_columns) -%}
     {%- set dest_cols_csv = dest_columns | map(attribute="name") | join(', ') -%}
 
     merge into {{ target }} as DBT_INTERNAL_DEST
@@ -31,10 +32,12 @@
 
 {% endmacro %}
 
-{% macro redshift__get_merge_sql(target, source, unique_key, dest_columns) -%}
-    {{ exceptions.raise_compiler_error('get_merge_sql is not implemented for Redshift') }}
-{% endmacro %}
+{% macro default__get_merge_sql(target, source, unique_key, dest_columns) -%}
+    {% set typename = adapter.type() %}
 
-{% macro postgres__get_merge_sql(target, source, unique_key, dest_columns) -%}
-    {{ exceptions.raise_compiler_error('get_merge_sql is not implemented for Postgres') }}
+    {{ exceptions.raise_compiler_error(
+        'get_merge_sql is not implemented for {}'.format(typename)
+       )
+    }}
+
 {% endmacro %}

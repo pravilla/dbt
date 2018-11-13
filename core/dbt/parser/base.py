@@ -8,6 +8,7 @@ import dbt.hooks
 import dbt.clients.jinja
 import dbt.context.parser
 
+from dbt.include.global_project import PROJECT_NAME as GLOBAL_PROJECT_NAME
 from dbt.utils import coalesce
 from dbt.logger import GLOBAL_LOGGER as logger
 from dbt.contracts.graph.parsed import ParsedNode
@@ -76,7 +77,7 @@ class MacrosKnownParser(BaseParser):
         if get_schema_macro is None:
             get_schema_macro = self.macro_manifest.find_macro_by_name(
                 'generate_schema_name',
-                dbt.include.GLOBAL_PROJECT_NAME
+                GLOBAL_PROJECT_NAME
             )
         if get_schema_macro is None:
             def get_schema(_):

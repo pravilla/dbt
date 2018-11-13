@@ -2,7 +2,7 @@ import shutil
 import os
 import webbrowser
 
-from dbt.include import DOCS_INDEX_FILE_PATH
+from dbt.include.global_project import DOCS_INDEX_FILE_PATH
 from dbt.compat import SimpleHTTPRequestHandler, TCPServer
 from dbt.logger import GLOBAL_LOGGER as logger
 

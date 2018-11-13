@@ -2,6 +2,7 @@ from dbt.logger import GLOBAL_LOGGER as logger
 
 import dbt.exceptions
 from importlib import import_module
+from dbt.include.global_project import PACKAGES
 
 import threading
 
@@ -28,6 +29,24 @@ def get_relation_class_by_name(adapter_name):
     return adapter.Relation
 
 
+def load_includes(adapter_name):
+    """Load an adapter package's includes package and put it in the PACKAGES
+    dict.
+    """
+    try:
+        include = import_module('.'+adapter_name, 'dbt.include')
+    except ImportError:
+        logger.debug(
+            'No adapter include project found, maybe there are no macros '
+            'defined for {}'.format(adapter_name)
+        )
+        return
+    PACKAGES[include.PROJECT_NAME] = include.PACKAGE_PATH
+    # if an include package defines dependencies on other adapters, include
+    # those as well
+    PACKAGES.update(getattr(include, 'PACKAGES', {}))
+
+
 def load_adapter(adapter_name):
     """Load an adapter package with the class of adapter_name, put it in the
     ADAPTER_TYPES dict, and return its associated Credentials
@@ -38,6 +57,9 @@ def load_adapter(adapter_name):
         raise dbt.exceptions.RuntimeException(
             "Could not find adapter type {}!".format(adapter_name)
         )
+
+    load_includes(adapter_name)
+
     if mod.Adapter.type() != adapter_name:
         raise dbt.exceptions.RuntimeException(
             'Expected to find adapter with type named {}, got adapter with '

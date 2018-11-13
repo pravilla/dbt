@@ -16,6 +16,12 @@ setup(
     author_email="info@fishtownanalytics.com",
     url="https://github.com/fishtown-analytics/dbt",
     packages=find_packages(),
+    package_data={
+        'dbt': [
+            'include/bigquery/macros/*.sql',
+            'include/bigquery/macros/**/*.sql',
+        ]
+    },
     install_requires=[
         'dbt-core=={}'.format(package_version),
         'google-cloud-bigquery>=1.0.0,<2',

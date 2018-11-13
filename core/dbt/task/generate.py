@@ -5,7 +5,7 @@ import shutil
 from dbt.adapters.factory import get_adapter
 from dbt.clients.system import write_json
 from dbt.compat import bigint
-from dbt.include import DOCS_INDEX_FILE_PATH
+from dbt.include.global_project import DOCS_INDEX_FILE_PATH
 import dbt.ui.printer
 import dbt.utils
 import dbt.compilation

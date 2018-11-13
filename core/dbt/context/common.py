@@ -7,6 +7,8 @@ from dbt.adapters.factory import get_adapter
 from dbt.compat import basestring
 from dbt.node_types import NodeType
 from dbt.contracts.graph.parsed import ParsedMacro, ParsedNode
+from dbt.include.global_project import PACKAGES
+from dbt.include.global_project import PROJECT_NAME as GLOBAL_PROJECT_NAME
 
 import dbt.clients.jinja
 import dbt.clients.agate_helper
@@ -84,6 +86,20 @@ class DatabaseWrapper(object):
         return self.adapter.commit_if_has_connection(self.model.get('name'))
 
 
+def _add_macro_map(context, package_name, macro_map):
+    """Update an existing context in-place, adding the given macro map to the
+    appropriate package namespace. Adapter packages get inserted into the
+    global namespace.
+    """
+    key = package_name
+    if package_name in PACKAGES:
+        key = GLOBAL_PROJECT_NAME
+    if key not in context:
+        context[key] = {}
+
+    context[key].update(macro_map)
+
+
 def _add_macros(context, model, manifest):
     macros_to_add = {'global': [], 'local': []}
 
@@ -96,15 +112,12 @@ def _add_macros(context, model, manifest):
             macro.name: macro.generator(context)
         }
 
-        if context.get(package_name) is None:
-            context[package_name] = {}
-
-        context.get(package_name, {}) \
-               .update(macro_map)
+        # adapter packages are part of the global project space
+        _add_macro_map(context, package_name, macro_map)
 
         if package_name == model.package_name:
             macros_to_add['local'].append(macro_map)
-        elif package_name == dbt.include.GLOBAL_PROJECT_NAME:
+        elif package_name in PACKAGES:
             macros_to_add['global'].append(macro_map)
 
     # Load global macros before local macros -- local takes precedence
