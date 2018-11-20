@@ -2,5 +2,11 @@ from dbt.adapters.postgres.connections import PostgresConnectionManager
 from dbt.adapters.postgres.connections import PostgresCredentials
 from dbt.adapters.postgres.impl import PostgresAdapter
 
-Adapter = PostgresAdapter
-Credentials = PostgresCredentials
+from dbt.adapters.base import AdapterPlugin
+from dbt.include import postgres
+
+Plugin = AdapterPlugin(
+    adapter=PostgresAdapter,
+    credentials=PostgresCredentials,
+    project_name=postgres.PROJECT_NAME,
+    include_path=postgres.PACKAGE_PATH)

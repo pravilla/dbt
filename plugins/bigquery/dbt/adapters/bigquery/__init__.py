@@ -3,5 +3,11 @@ from dbt.adapters.bigquery.connections import BigQueryCredentials
 from dbt.adapters.bigquery.relation import BigQueryRelation
 from dbt.adapters.bigquery.impl import BigQueryAdapter
 
-Adapter = BigQueryAdapter
-Credentials = BigQueryCredentials
+from dbt.adapters.base import AdapterPlugin
+from dbt.include import bigquery
+
+Plugin = AdapterPlugin(
+    adapter=BigQueryAdapter,
+    credentials=BigQueryCredentials,
+    project_name=bigquery.PROJECT_NAME,
+    include_path=bigquery.PACKAGE_PATH)

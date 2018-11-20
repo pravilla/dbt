@@ -6,7 +6,6 @@ from dbt.include.global_project import PACKAGES
 
 import threading
 
-
 ADAPTER_TYPES = {}
 
 _ADAPTERS = {}
@@ -29,46 +28,31 @@ def get_relation_class_by_name(adapter_name):
     return adapter.Relation
 
 
-def load_includes(adapter_name):
-    """Load an adapter package's includes package and put it in the PACKAGES
-    dict.
-    """
-    try:
-        include = import_module('.'+adapter_name, 'dbt.include')
-    except ImportError:
-        logger.debug(
-            'No adapter include project found, maybe there are no macros '
-            'defined for {}'.format(adapter_name)
-        )
-        return
-    PACKAGES[include.PROJECT_NAME] = include.PACKAGE_PATH
-    # if an include package defines dependencies on other adapters, include
-    # those as well
-    PACKAGES.update(getattr(include, 'PACKAGES', {}))
-
-
-def load_adapter(adapter_name):
-    """Load an adapter package with the class of adapter_name, put it in the
-    ADAPTER_TYPES dict, and return its associated Credentials
-    """
+def load_plugin(adapter_name):
     try:
         mod = import_module('.'+adapter_name, 'dbt.adapters')
     except ImportError:
         raise dbt.exceptions.RuntimeException(
             "Could not find adapter type {}!".format(adapter_name)
         )
+    plugin = mod.Plugin
 
-    load_includes(adapter_name)
-
-    if mod.Adapter.type() != adapter_name:
+    if plugin.adapter.type() != adapter_name:
         raise dbt.exceptions.RuntimeException(
             'Expected to find adapter with type named {}, got adapter with '
             'type {}'
-            .format(adapter_name, mod.Adapter.type())
+            .format(adapter_name, plugin.adapter.type())
         )
 
-    ADAPTER_TYPES[adapter_name] = mod.Adapter
-    return mod.Credentials
+    with _ADAPTER_LOCK:
+        ADAPTER_TYPES[adapter_name] = plugin.adapter
+
+    PACKAGES[plugin.project_name] = plugin.include_path
+
+    for dep in plugin.dependencies:
+        load_plugin(dep)
+
+    return plugin.credentials
 
 
 def get_adapter(config):

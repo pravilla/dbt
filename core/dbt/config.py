@@ -13,7 +13,7 @@ from dbt.contracts.project import Project as ProjectContract, Configuration, \
 from dbt.exceptions import DbtProjectError, DbtProfileError, RecursionException
 from dbt.context.common import env_var, Var
 from dbt import compat
-from dbt.adapters.factory import load_adapter, get_relation_class_by_name
+from dbt.adapters.factory import load_plugin, get_relation_class_by_name
 
 from dbt.logger import GLOBAL_LOGGER as logger
 from dbt.utils import DBTConfigKeys
@@ -536,7 +536,7 @@ class Profile(object):
         typename = profile.pop('type')
 
         try:
-            cls = load_adapter(typename)
+            cls = load_plugin(typename)
             credentials = cls(**profile)
         except dbt.exceptions.RuntimeException as e:
             raise DbtProfileError(

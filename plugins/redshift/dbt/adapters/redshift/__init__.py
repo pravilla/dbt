@@ -2,5 +2,13 @@ from dbt.adapters.redshift.connections import RedshiftConnectionManager
 from dbt.adapters.redshift.connections import RedshiftCredentials
 from dbt.adapters.redshift.impl import RedshiftAdapter
 
-Adapter = RedshiftAdapter
-Credentials = RedshiftCredentials
+
+from dbt.adapters.base import AdapterPlugin
+from dbt.include import redshift
+
+Plugin = AdapterPlugin(
+    adapter=RedshiftAdapter,
+    credentials=RedshiftCredentials,
+    project_name=redshift.PROJECT_NAME,
+    include_path=redshift.PACKAGE_PATH,
+    dependencies=['postgres'])
