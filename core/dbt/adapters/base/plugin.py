@@ -1,8 +1,10 @@
+import os
+
+from dbt.config.project import Project
+
 
 class AdapterPlugin(object):
     """Defines the basic requirements for a dbt adapter plugin.
-
-    TODO: should we load the project config and extract the project name?
 
     :param type adapter: An adapter class, derived from BaseAdapter
     :param type credentials: A credentials object, derived from Credentials
@@ -12,12 +14,13 @@ class AdapterPlugin(object):
     :param Optional[List[str]] dependencies: A list of adapter names that this\
         adapter depends upon.
     """
-    def __init__(self, adapter, credentials, project_name, include_path,
-                 dependencies=None):
+    def __init__(self, adapter, credentials, include_path, dependencies=None):
         self.adapter = adapter
         self.credentials = credentials
-        self.project_name = project_name
         self.include_path = include_path
+        project_path = os.path.join(self.include_path, adapter.type())
+        project = Project.from_project_root(project_path, {})
+        self.project_name = project.project_name
         if dependencies is None:
             dependencies = []
         self.dependencies = dependencies

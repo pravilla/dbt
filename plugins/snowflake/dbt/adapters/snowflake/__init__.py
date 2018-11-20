@@ -9,5 +9,4 @@ from dbt.include import snowflake
 Plugin = AdapterPlugin(
     adapter=SnowflakeAdapter,
     credentials=SnowflakeCredentials,
-    project_name=snowflake.PROJECT_NAME,
     include_path=snowflake.PACKAGE_PATH)

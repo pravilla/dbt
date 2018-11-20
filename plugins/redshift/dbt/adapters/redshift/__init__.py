@@ -9,6 +9,5 @@ from dbt.include import redshift
 Plugin = AdapterPlugin(
     adapter=RedshiftAdapter,
     credentials=RedshiftCredentials,
-    project_name=redshift.PROJECT_NAME,
     include_path=redshift.PACKAGE_PATH,
     dependencies=['postgres'])

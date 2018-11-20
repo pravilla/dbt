@@ -8,5 +8,4 @@ from dbt.include import postgres
 Plugin = AdapterPlugin(
     adapter=PostgresAdapter,
     credentials=PostgresCredentials,
-    project_name=postgres.PROJECT_NAME,
     include_path=postgres.PACKAGE_PATH)
