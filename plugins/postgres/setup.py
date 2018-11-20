@@ -15,6 +15,11 @@ setup(
     author_email="info@fishtownanalytics.com",
     url="https://github.com/fishtown-analytics/dbt",
     packages=find_packages(),
+    package_data={
+        'dbt': [
+            'include/postgres/macros/*.sql',
+        ]
+    },
     install_requires=[
         'dbt-core=={}'.format(package_version),
         'psycopg2>=2.7.5,<2.8',

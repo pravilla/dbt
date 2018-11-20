@@ -16,6 +16,11 @@ setup(
     author_email="info@fishtownanalytics.com",
     url="https://github.com/fishtown-analytics/dbt",
     packages=find_packages(),
+    package_data={
+        'dbt': [
+            'include/redshift/macros/*.sql',
+        ]
+    },
     install_requires=[
         'dbt-core=={}'.format(package_version),
         'dbt-postgres=={}'.format(package_version),
