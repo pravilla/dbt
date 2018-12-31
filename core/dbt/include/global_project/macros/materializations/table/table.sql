@@ -52,7 +52,7 @@
       {%- if old_relation is not none -%}
         {{ create_table_as(create_as_temporary, intermediate_relation, sql) }}
 
-        {% set dest_columns = adapter.get_columns_in_relation(target_relation) %}
+        {% set dest_columns = get_columns_in_relation(target_relation) %}
         {% set dest_cols_csv = dest_columns | map(attribute='quoted') | join(', ') %}
 
         insert into {{ target_relation }} ({{ dest_cols_csv }}) (

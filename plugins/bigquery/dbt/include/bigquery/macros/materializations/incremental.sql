@@ -52,7 +52,7 @@
       {{ create_table_as(False, target_relation, sql) }}
     {%- endcall -%}
   {%- else -%}
-     {% set dest_columns = adapter.get_columns_in_relation(target_relation) %}
+     {% set dest_columns = get_columns_in_relation(target_relation) %}
      {%- call statement('main') -%}
        {{ get_merge_sql(target_relation, source_sql, unique_key, dest_columns) }}
      {% endcall %}

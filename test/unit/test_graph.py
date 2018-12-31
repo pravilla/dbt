@@ -1,4 +1,4 @@
-from mock import MagicMock
+from mock import MagicMock, patch
 import os
 import six
 import unittest
@@ -27,21 +27,24 @@ from .utils import config_from_parts_or_dicts
 class GraphTest(unittest.TestCase):
 
     def tearDown(self):
-        nx.write_gpickle = self.real_write_gpickle
-        dbt.utils.dependency_projects = self.real_dependency_projects
-        dbt.clients.system.find_matching = self.real_find_matching
-        dbt.clients.system.load_file_contents = self.real_load_file_contents
+        self.write_gpickle_patcher.stop()
+        self.dependency_projects_patcher.stop()
+        self.find_matching_patcher.stop()
+        self.load_file_contents_patcher.stop()
 
     def setUp(self):
         dbt.flags.STRICT_MODE = True
+        self.graph_result = None
+
+        self.write_gpickle_patcher = patch('networkx.write_gpickle')
+        self.dependency_projects_patcher = patch('dbt.utils.dependency_projects')
+        self.find_matching_patcher = patch('dbt.clients.system.find_matching')
+        self.load_file_contents_patcher = patch('dbt.clients.system.load_file_contents')
 
         def mock_write_gpickle(graph, outfile):
             self.graph_result = graph
-
-        self.real_write_gpickle = nx.write_gpickle
-        nx.write_gpickle = mock_write_gpickle
-
-        self.graph_result = None
+        self.mock_write_gpickle = self.write_gpickle_patcher.start()
+        self.mock_write_gpickle.side_effect = mock_write_gpickle
 
         self.profile = {
             'outputs': {
@@ -59,14 +62,13 @@ class GraphTest(unittest.TestCase):
             'target': 'test'
         }
 
-        self.real_dependency_projects = dbt.utils.dependency_projects
-        dbt.utils.dependency_projects = MagicMock(return_value=[])
+        self.mock_dependency_projects = self.dependency_projects_patcher.start()
+        self.mock_dependency_projects.return_value = []
 
         self.mock_models = []
         self.mock_content = {}
 
-        def mock_find_matching(root_path, relative_paths_to_search,
-                               file_pattern):
+        def mock_find_matching(root_path, relative_paths_to_search, file_pattern):
             if 'sql' not in file_pattern:
                 return []
 
@@ -77,16 +79,14 @@ class GraphTest(unittest.TestCase):
 
             return to_return
 
-        self.real_find_matching = dbt.clients.system.find_matching
-        dbt.clients.system.find_matching = MagicMock(
-            side_effect=mock_find_matching)
+        self.mock_find_matching = self.find_matching_patcher.start()
+        self.mock_find_matching.side_effect = mock_find_matching
 
         def mock_load_file_contents(path):
             return self.mock_content[path]
 
-        self.real_load_file_contents = dbt.clients.system.load_file_contents
-        dbt.clients.system.load_file_contents = MagicMock(
-            side_effect=mock_load_file_contents)
+        self.mock_load_file_contents = self.load_file_contents_patcher.start()
+        self.mock_load_file_contents.side_effect = mock_load_file_contents
 
     def get_config(self, extra_cfg=None):
         if extra_cfg is None:

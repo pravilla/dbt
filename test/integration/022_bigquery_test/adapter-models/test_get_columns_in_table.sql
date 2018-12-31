@@ -1,5 +1,5 @@
 {% set source = ref('source') %}
-{% set cols = adapter.get_columns_in_relation(source) %}
+{% set cols = get_columns_in_relation(source) %}
 
 select
     {% for col in cols %}

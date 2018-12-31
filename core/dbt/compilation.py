@@ -8,8 +8,8 @@ import dbt.utils
 import dbt.include
 import dbt.tracking
 
+from dbt import deprecations
 from dbt.utils import get_materialization, NodeType, is_type
-
 from dbt.linker import Linker
 
 import dbt.compat
@@ -236,7 +236,7 @@ class Compiler(object):
         for unique_id, node in manifest.nodes.items():
             is_model = node.resource_type == NodeType.Model
             if is_model and 'sql_where' in node.config:
-                dbt.deprecations.warn('sql_where')
+                deprecations.warn('sql_where')
 
     def compile(self):
         linker = Linker()

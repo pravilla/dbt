@@ -169,34 +169,40 @@ def get_docs_macro_name(docs_name, with_prefix=True):
         return docs_name
 
 
-def dependencies_for_path(config, module_path):
-    """Given a module path, yield all dependencies in that path."""
-    logger.debug("Loading dependency project from {}".format(module_path))
-    for obj in os.listdir(module_path):
-        full_obj = os.path.join(module_path, obj)
+def _project_directories(root):
+    for name in os.listdir(root):
+        full_obj = os.path.join(root, name)
 
-        if not os.path.isdir(full_obj) or obj.startswith('__'):
+        if not os.path.isdir(full_obj) or name.startswith('__'):
             # exclude non-dirs and dirs that start with __
             # the latter could be something like __pycache__
             # for the global dbt modules dir
             continue
 
+        yield full_obj
+
+
+def _load_projects(config, paths):
+    for path in paths:
         try:
-            yield config.new_project(full_obj)
+            yield config.new_project(path)
         except dbt.exceptions.DbtProjectError as e:
             raise dbt.exceptions.DbtProjectError(
                 'Failed to read package at {}: {}'
-                .format(full_obj, e)
+                .format(path, e)
             )
 
 
 def dependency_projects(config):
-    module_paths = list(PACKAGES.values())
-    module_paths.append(os.path.join(config.project_root, config.modules_path))
+    project_paths = list(PACKAGES.values())
 
-    for module_path in module_paths:
-        for entry in dependencies_for_path(config, module_path):
-            yield entry
+    modules_root = os.path.join(config.project_root, config.modules_path)
+    project_paths.extend(_project_directories(modules_root))
+    return _load_projects(config, project_paths)
+
+
+def internal_projects(config):
+    return _load_projects(config, list(PACKAGES.values()))
 
 
 def split_path(path):

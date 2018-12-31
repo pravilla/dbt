@@ -2,7 +2,7 @@ import dbt.exceptions
 
 from dbt.node_types import NodeType
 from dbt.contracts.graph.manifest import Manifest
-from dbt.utils import timestring
+from dbt.utils import timestring, internal_projects
 
 from dbt.parser import MacroParser, ModelParser, SeedParser, AnalysisParser, \
     DocumentationParser, DataTestParser, HookParser, ArchiveParser, \
@@ -21,20 +21,6 @@ class GraphLoader(object):
         self.disabled = []
         self.macro_manifest = None
 
-    def _load_macro_nodes(self, resource_type):
-        parser = MacroParser(self.root_project, self.all_projects)
-        for project_name, project in self.all_projects.items():
-            self.macros.update(parser.load_and_parse(
-                package_name=project_name,
-                root_dir=project.project_root,
-                relative_dirs=project.macro_paths,
-                resource_type=resource_type,
-            ))
-
-        # make a manifest with just the macros to get the context
-        self.macro_manifest = Manifest(macros=self.macros, nodes={}, docs={},
-                                       generated_at=timestring(), disabled=[])
-
     def _load_sql_nodes(self, parser_type, resource_type, relative_dirs_attr,
                         **kwargs):
         parser = parser_type(self.root_project, self.all_projects,
@@ -52,8 +38,18 @@ class GraphLoader(object):
             self.disabled.extend(disabled)
 
     def _load_macros(self):
-        self._load_macro_nodes(NodeType.Macro)
-        self._load_macro_nodes(NodeType.Operation)
+        parser = MacroParser(self.root_project, self.all_projects)
+        for project_name, project in self.all_projects.items():
+            self.macros.update(parser.load_and_parse(
+                package_name=project_name,
+                root_dir=project.project_root,
+                relative_dirs=project.macro_paths,
+                resource_type=NodeType.Macro,
+            ))
+
+        # make a manifest with just the macros to get the context
+        self.macro_manifest = Manifest(macros=self.macros, nodes={}, docs={},
+                                       generated_at=timestring(), disabled=[])
 
     def _load_seeds(self):
         parser = SeedParser(self.root_project, self.all_projects,
@@ -120,6 +116,8 @@ class GraphLoader(object):
         self._load_nodes()
         self._load_docs()
         self._load_schema_tests()
+
+    def create_manifest(self):
         manifest = Manifest(
             nodes=self.nodes,
             macros=self.macros,
@@ -135,6 +133,21 @@ class GraphLoader(object):
         manifest = ParserUtils.process_docs(manifest, self.root_project)
         return manifest
 
+    def load_without_nodes(self):
+        self._load_macros()
+        self._load_docs()
+
+    # TODO: refactor these two/add manifest methods so we don't have to
+    # re-parse the internal projects
     @classmethod
     def load_all(cls, project_config, all_projects):
-        return cls(project_config, all_projects).load()
+        loader = cls(project_config, all_projects)
+        loader.load()
+        return loader.create_manifest()
+
+    @classmethod
+    def load_internal(cls, config):
+        projects = {p.project_name: p for p in internal_projects(config)}
+        loader = cls(config, projects)
+        loader.load_without_nodes()
+        return loader.create_manifest()

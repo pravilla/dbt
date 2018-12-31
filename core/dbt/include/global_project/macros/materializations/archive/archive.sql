@@ -168,7 +168,7 @@
     {{ exceptions.relation_wrong_type(target_relation, 'table') }}
   {%- endif -%}
 
-  {%- set source_columns = adapter.get_columns_in_relation(source_relation) -%}
+  {%- set source_columns = get_columns_in_relation(source_relation) -%}
   {%- set unique_key = config.get('unique_key') -%}
   {%- set updated_at = config.get('updated_at') -%}
   {%- set dest_columns = source_columns + [
